@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,7 +12,7 @@ use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Jetstream\HasTeams;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens;
     use HasFactory;
@@ -58,4 +59,21 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    public function tareas()
+    {
+        return $this->hasMany(Tarea::class);
+    }
+    
+    public function getNombreCorreoAttribute()
+    {
+        return strtoupper($this->name) . " (". $this->email .")";
+    }
+
+    // protected function nombreCorreo(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn () => $this->name . " (". $this->email .")",
+    //     );
+    // }
 }

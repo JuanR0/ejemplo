@@ -2,15 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\TareasPendientes;
 use App\Models\Tarea;
+use App\Models\Etiqueta;
+use App\Models\Comment;
+use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Gate;
 
 class TareaController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth')->except(['index','show']);
+    }
+
     private $reglasValidacion = [
             'tarea' => 'required|min:5|max:255',
             'descripcion' => ['required','min:5','max:255'],
             'categoria' => 'required',
+            'etiqueta_id' => 'required',
     ];
     /**
      * Display a listing of the resource.
@@ -19,7 +32,9 @@ class TareaController extends Controller
      */
     public function index()
     {
-        $tareas = Tarea::all();
+        $tareas = Tarea::with('user:id,name,email')->with('etiquetas')->withTrashed()->get();
+        //$tareas = Auth::user()->tareas;
+        // $tareas = Auth::user()->tareas()->where('categoria','Escuela')->get();
         return view('tareas.indexTareas',compact('tareas'));
     }
 
@@ -30,7 +45,10 @@ class TareaController extends Controller
      */
     public function create()
     {
-        return view('tareas.formTareas');
+        //Gate::authorize('admin', $tarea);
+
+        $etiquetas = Etiqueta::all();
+        return view('tareas.formTareas',compact('etiquetas'));
     }
 
     /**
@@ -43,11 +61,27 @@ class TareaController extends Controller
     {
         $request->validate($this->reglasValidacion);
 
-        $tarea = new Tarea();
-        $tarea->tarea = $request->tarea;
-        $tarea->descripcion = $request->descripcion;
-        $tarea->categoria = $request->categoria;
-        $tarea->save();
+        $request->merge([
+            'user_id' => Auth::id(),
+        ]);
+        $tarea = Tarea::create($request->all());
+
+        $tarea->etiquetas()->attach($request->etiqueta_id);
+
+        // $tarea = new Tarea();
+        // $tarea->tarea = $request->tarea;
+        // $tarea->descripcion = $request->descripcion;
+        // $tarea->categoria = $request->categoria;
+
+        // $user = Auth::user();
+        // $user->tareas()->save($tarea);
+
+        // $tarea = new Tarea();
+        // $tarea->user_id = Auth::id();
+        // $tarea->tarea = $request->tarea;
+        // $tarea->descripcion = $request->descripcion;
+        // $tarea->categoria = $request->categoria;
+        // $tarea->save();
 
         return \redirect('/tarea');
     }
@@ -71,7 +105,8 @@ class TareaController extends Controller
      */
     public function edit(Tarea $tarea)
     {
-        return view('tareas.formTareas', compact('tarea'));
+        $etiquetas = Etiqueta::all();
+        return view('tareas.formTareas', compact('tarea', 'etiquetas'));
     }
 
     /**
@@ -85,10 +120,14 @@ class TareaController extends Controller
     {
         $request->validate($this->reglasValidacion);
 
-        $tarea->tarea = $request->tarea;
-        $tarea->descripcion = $request->descripcion;
-        $tarea->categoria = $request->categoria;
-        $tarea->save();
+        Tarea::where('id', $tarea->id)->update($request->except(['_token','_method','etiqueta_id']));
+
+        $tarea->etiquetas()->sync($request->etiqueta_id);
+
+        // $tarea->tarea = $request->tarea;
+        // $tarea->descripcion = $request->descripcion;
+        // $tarea->categoria = $request->categoria;
+        // $tarea->save();
 
         return redirect ('/tarea/'.$tarea->id);
     }
@@ -99,9 +138,27 @@ class TareaController extends Controller
      * @param  \App\Models\Tarea  $tarea
      * @return \Illuminate\Http\Response
      */
+
     public function destroy(Tarea $tarea)
     {
+        if(!Gate::allows('admin', $tarea))
+        {
+            abort(403);
+        }
         $tarea->delete();
         return redirect('/tarea');
+    }
+    
+    public function borradoDb($tarea)
+    {
+        $tarea = Tarea::where('id', $tarea)->withTrashed()->first();
+        $tarea->forceDelete();
+        return redirect('/tarea');
+    }
+
+    public function enviarTareas()
+    {
+        Mail::to(Auth::user()->email)->send(new TareasPendientes());
+        return redirect()->back();
     }
 }

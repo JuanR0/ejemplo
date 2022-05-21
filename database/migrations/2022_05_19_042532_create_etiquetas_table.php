@@ -13,13 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tareas', function (Blueprint $table) {
+        Schema::create('etiquetas', function (Blueprint $table) {
             $table->id();
-            $table -> foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('tarea');
-            $table->text('descripcion');
-            $table->string('categoria',50);
-            $table->timestamps();
+            //$table->timestamps();
+            $table->string('etiqueta');
         });
     }
 
@@ -30,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tareas');
+        Schema::dropIfExists('etiquetas');
     }
 };

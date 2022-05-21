@@ -1,3 +1,5 @@
+<x-layout>
+<div class="right_col" role="main">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,7 +46,17 @@
             <option value="Trabajo"{{isset($tarea) && $tarea->categoria == 'Trabajo' ? 'selected' : ''}}>Trabajo </option>
             <option value="Otra"{{isset($tarea) && $tarea->categoria == 'Otra' ? 'selected' : ''}}>Otra </option>
         </select>
+
+        <br>
+        <label for="etiqueta_id">Etiqueta</label>
+        <select name="etiqueta_id[]" multiple>
+            @foreach ($etiquetas as $etiqueta)
+                <option value="{{$etiqueta->id}}" {{isset($tarea) && array_search($etiqueta->id, $tarea->etiquetas->pluck('id')->toArray()) !== false ? ' selected' : ''}}>{{$etiqueta->etiqueta}}</option>
+            @endforeach
+        </select>
+        <br>
         <input type="submit" value="Guardar">
     </form>
 </body>
 </html>
+</x-layout>

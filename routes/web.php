@@ -19,6 +19,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('tareas-pendientes',[TareaController::class, 'enviarTareas']);
+
+Route::post('tarea/eliminar-db/{tarea}', [TareaController::class, 'borradoDb']);
+
 Route::resource('/tarea', TareaController::class);
 // Route::get('/tareas', [TareasController::class, 'index']);
 // Route::get('/tareas/create', [TareasController::class, 'create']);
@@ -44,3 +48,4 @@ Route::get('bienvenida', function(){
 Route::get('contacto', function(){
     return view('contacto');
 });
+

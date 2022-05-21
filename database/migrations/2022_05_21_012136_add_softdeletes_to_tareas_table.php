@@ -13,15 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('tareas', function (Blueprint $table) {
-            $table->id();
-            $table -> foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('tarea');
-            $table->text('descripcion');
-            $table->string('categoria',50);
-            $table->timestamps();
+        Schema::table('tareas', function (Blueprint $table) {
+            $table->softDeletes();
         });
-    }
+    } 
 
     /**
      * Reverse the migrations.
@@ -30,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('tareas');
+        Schema::table('tareas', function (Blueprint $table) {
+            $table->dropSoftDeletes();
+        });
     }
 };
